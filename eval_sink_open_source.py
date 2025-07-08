@@ -81,7 +81,7 @@ def measure_open_sourced_lms():
         #########################################
 
         # load data and feed them into LLMs
-        file_path = "datasets/probe_valid_natural.jsonl"
+        file_path = "datasets/probe_valid.jsonl"
         token_length = 64
             
         score_path = f"results/{model_name}/token{token_length}.npy"
