@@ -50,7 +50,7 @@ class Config:
     shared_attention_norm: bool = False
     _norm_class: Literal["LayerNorm", "RMSNorm"] = "LayerNorm"
     norm_eps: float = 1e-5
-    _mlp_class: Literal["GptNeoxMLP", "LLaMAMLP", "ReluMLP", "SwishMLP", "GeluMLP", "GegluMLP", "RegluMLP"] = "GptNeoxMLP"
+    _mlp_class: Literal["GptNeoxMLP", "LLaMAMLP", "ReluMLP", "SwishMLP", "GeluMLP", "GegluMLP", "RegluMLP", "SiGLUMLP", "TanhGLUMLP", "CappedSwiGLUMLP", "NormGLUMLP", "AdditiveGateMLP", "SmoothCappedSwiGLUMLP"] = "GptNeoxMLP"
     intermediate_size: Optional[int] = None
     condense_ratio: int = 1
     prefix_token: int = 0
@@ -99,6 +99,12 @@ class Config:
     @property
     def mlp_class(self) -> Type:
         # `self._mlp_class` cannot be the type to keep the config json serializable
+        if self._mlp_class in ["SiGLUMLP", "TanhGLUMLP", "CappedSwiGLUMLP", "NormGLUMLP", "AdditiveGateMLP", "SmoothCappedSwiGLUMLP"]:
+            from lit_gpt.model_glu_variants import (
+                SiGLUMLP, TanhGLUMLP, CappedSwiGLUMLP, NormGLUMLP,
+                AdditiveGateMLP, SmoothCappedSwiGLUMLP
+            )
+            return locals()[self._mlp_class]
         return getattr(lit_gpt.model, self._mlp_class)
 
     @property
@@ -937,6 +943,109 @@ regmix_llama = [
         _mlp_class="LLaMAMLP",
         intermediate_size=1536,
         window_size=32,
+    ),
+    # GLU Variants - keeping softmax attention, replacing SwiGLU in FFN
+    dict(
+        org="RegMix Paper",
+        name="tinyllama_60M_siglu",
+        block_size=2048,
+        vocab_size=50432,
+        padding_multiple=64,
+        n_layer=10,
+        n_head=8,
+        n_embd=768,
+        rotary_percentage=1.0,
+        parallel_residual=False,
+        bias=False,
+        _norm_class="FusedRMSNorm",
+        norm_eps=1e-5,
+        _mlp_class="SiGLUMLP",
+        intermediate_size=1536
+    ),
+    dict(
+        org="RegMix Paper",
+        name="tinyllama_60M_tanhglu",
+        block_size=2048,
+        vocab_size=50432,
+        padding_multiple=64,
+        n_layer=10,
+        n_head=8,
+        n_embd=768,
+        rotary_percentage=1.0,
+        parallel_residual=False,
+        bias=False,
+        _norm_class="FusedRMSNorm",
+        norm_eps=1e-5,
+        _mlp_class="TanhGLUMLP",
+        intermediate_size=1536
+    ),
+    dict(
+        org="RegMix Paper",
+        name="tinyllama_60M_capped_swiglu",
+        block_size=2048,
+        vocab_size=50432,
+        padding_multiple=64,
+        n_layer=10,
+        n_head=8,
+        n_embd=768,
+        rotary_percentage=1.0,
+        parallel_residual=False,
+        bias=False,
+        _norm_class="FusedRMSNorm",
+        norm_eps=1e-5,
+        _mlp_class="CappedSwiGLUMLP",
+        intermediate_size=1536
+    ),
+    dict(
+        org="RegMix Paper",
+        name="tinyllama_60M_normglu",
+        block_size=2048,
+        vocab_size=50432,
+        padding_multiple=64,
+        n_layer=10,
+        n_head=8,
+        n_embd=768,
+        rotary_percentage=1.0,
+        parallel_residual=False,
+        bias=False,
+        _norm_class="FusedRMSNorm",
+        norm_eps=1e-5,
+        _mlp_class="NormGLUMLP",
+        intermediate_size=1536
+    ),
+    dict(
+        org="RegMix Paper",
+        name="tinyllama_60M_additive_gate",
+        block_size=2048,
+        vocab_size=50432,
+        padding_multiple=64,
+        n_layer=10,
+        n_head=8,
+        n_embd=768,
+        rotary_percentage=1.0,
+        parallel_residual=False,
+        bias=False,
+        _norm_class="FusedRMSNorm",
+        norm_eps=1e-5,
+        _mlp_class="AdditiveGateMLP",
+        intermediate_size=1536
+    ),
+    dict(
+        org="RegMix Paper",
+        name="tinyllama_60M_smooth_capped_swiglu",
+        block_size=2048,
+        vocab_size=50432,
+        padding_multiple=64,
+        n_layer=10,
+        n_head=8,
+        n_embd=768,
+        rotary_percentage=1.0,
+        parallel_residual=False,
+        bias=False,
+        _norm_class="FusedRMSNorm",
+        norm_eps=1e-5,
+        _mlp_class="SmoothCappedSwiGLUMLP",
+        intermediate_size=1536
     ),
 ]
 configs = regmix_llama

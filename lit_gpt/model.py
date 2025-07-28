@@ -13,6 +13,12 @@ from typing_extensions import Self
 from lit_gpt.config import Config
 from xformers.ops import SwiGLU
 
+# Import GLU variants
+from lit_gpt.model_glu_variants import (
+    SiGLUMLP, TanhGLUMLP, CappedSwiGLUMLP, NormGLUMLP,
+    AdditiveGateMLP, SmoothCappedSwiGLUMLP
+)
+
 RoPECache = Tuple[torch.Tensor, torch.Tensor]
 KVCache = Tuple[torch.Tensor, torch.Tensor]
 FlashAttention2Available = RequirementCache("flash-attn>=2.0.0.post1")
